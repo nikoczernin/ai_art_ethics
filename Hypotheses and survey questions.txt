@@ -1,0 +1,22 @@
+Group 9
+Students: Aliakseyeu Dzmitry, Nikolaus Czernin
+
+Chosen topic: Ethical concerns regarding artists' compensation for contributing to AI-generated art
+
+Research questions:
+	1.	Artists/authors would credit other artists/authors to more money, if the model were trained on them, than non-artists/non-authors.
+	2.	Artists/authors are, compared to non-artists/non-authors, more inclined to boycott art that was created by a model that trained on an artist, if the artist doesn't get any money out of it.
+	3.	There is no statistical connection between people who would grant artists/authors more money (question 1) and people who would boycott an AI-generated piece of art, that the trained-on artist did not make any money from, meaning that respondents, while they may agree with the ethical worries of artists regarding AI-generated art, they do not act upon those values. 
+
+Survey questions:
+	1.	Take a piece of art or text, generated entirely by a generative model (for an example of AI generated images, see Midjourney: https://www.midjourney.com/showcase/recent/). The model in question was trained using a single artist’s or author's work. The resulting output completely matches his style, creating a fake that would fool anyone. In your opinion, to how much of this piece’s generated revenue is the original artist/author entitled to? 
+	•	Answer: numerical ranging from 0% to 100% (of the generated revenue)
+	2.	Are you an artist/author yourself or have you created art/copywriting before (paid or unpaid, but mostly passionately)?
+	•	No, I have not created any art or copywriting passionately before.
+	•	I have created some art or copywriting before, but I do not care much for art.
+	•	I have a passion for art/copywriting, even though I do not create a lot.
+	•	I have a passion for art/copywriting and I like to create a lot in my free-time.
+	3.	Would you boycott a piece of art/copywriting, if the artist/author were used as training data and did not get compensated for it at all?
+	•	Yes
+	•	No
+	•	Only if I really like the artist
