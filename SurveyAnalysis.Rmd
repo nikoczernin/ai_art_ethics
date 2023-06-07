@@ -1,0 +1,46 @@
+---
+title: "Survey on ethics regarding AI-generated art"
+subtitle: "Data Acquisition and Survey Methods"
+output: html_notebook
+author: "Nikolaus Czernin, Aliakseyeu Dzimitry"
+---
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+
+```
+
+```{r}
+ans <- read.delim("answers.csv", sep = ";")
+names(ans) <- c("gender", "age", "program", "a1", "a2", "a3")
+ans <-
+  ans %>% 
+  mutate(
+    a1 = str_extract(a1, "[:digit:]*") %>% as.numeric(),
+    a2 = a2 %>% as.factor(),
+    a3 = a3 %>% as.factor()
+    ) 
+ans
+ans %>% summary()
+```
+
+# Exploratory analysis
+
+```{r}
+p1 <- ans %>% 
+  ggplot(aes(a1)) +
+  geom_histogram(bins=10)
+p2 <- ans %>% 
+  ggplot(aes(a1)) +
+  geom_boxplot() 
+ggarrange(p1, p2, nrow=2)
+
+```
+
+```{r}
+ans %>% 
+  filter(age<30) %>% 
+  ggplot(aes(age, a1)) +
+  geom_point()
+```
