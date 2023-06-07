@@ -5,7 +5,36 @@ output: html_notebook
 author: "Nikolaus Czernin, Aliakseyeu Dzimitry"
 ---
 
-```{r}
+# Requirements (delete)
+
+Survey data analysis, report & presentation:
+
+-   **Exploratory Data Analysis**: Choose appropriate methods to explore the categorical and quantitative features in your data set ([one visualization per research question]{.underline}). Briefly explain the methods and comment on your findings.
+
+-   **Descriptive Inference**: Compute suitable [summary statistics]{.underline} and display the [results in a table]{.underline}.
+
+-   **Analytic Inference**: Select an appropriate test statistic to [test your hypothesis]{.underline}. Summarize the results and explain how your findings are connected to your research question.
+
+\
+Guidelines for the report:
+
+-   use RMarkdown
+
+-   include a [table of contents]{.underline}
+
+-   briefly summarize the functions used
+
+-   display all [important]{.underline} code snippets in the .pdf
+
+-   document your findings
+
+Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
+
+```{r, include=FALSE}
+# @Nate: Guidlines say to only include important code snippets
+# I would argue that noone will read this snipped
+# therefore I set include to FALSE
+# feel free to change it if you disagree
 library(tidyverse)
 library(ggpubr)
 
