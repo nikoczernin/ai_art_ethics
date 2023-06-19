@@ -37,7 +37,7 @@ Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 # feel free to change it if you disagree
 library(tidyverse)
 library(ggpubr)
-
+library(forcats)
 ```
 
 ```{r}
@@ -45,23 +45,31 @@ ans <- read.delim("answers.csv", sep = ";")
 names(ans) <- c("gender", "age", "program", "a1", "a2", "a3")
 ans <-
   ans %>% 
+  # rename the answer cols and transform them 
   mutate(
-    a1 = str_extract(a1, "[:digit:]*") %>% as.numeric(),
-    a2 = a2 %>% as.factor(),
-    a3 = a3 %>% as.factor()
-    ) 
+    revenue.deserved = str_extract(a1, "[:digit:]*") %>% as.numeric(),
+    is.artist = a2 %>% as.factor(),
+    would.boycott = a3 %>% as.factor()
+    ) %>% 
+  select(-a1, -a2, -a3)
 ans
 ans %>% summary()
+
+ans %>% select(is.artist)
+# recode the factor levels of the longer answers
+levels(ans$is.artist) <- c("I'm an artist", "I enjoy creating art", 
+                                "I created some art, not passionately", "I do not create")
+ans %>% select(is.artist)
 ```
 
 # Exploratory analysis
 
 ```{r}
 p1 <- ans %>% 
-  ggplot(aes(a1)) +
+  ggplot(aes(revenue.deserved)) +
   geom_histogram(bins=10)
 p2 <- ans %>% 
-  ggplot(aes(a1)) +
+  ggplot(aes(revenue.deserved)) +
   geom_boxplot() 
 ggarrange(p1, p2, nrow=2)
 
@@ -70,6 +78,27 @@ ggarrange(p1, p2, nrow=2)
 ```{r}
 ans %>% 
   filter(age<30) %>% 
-  ggplot(aes(age, a1)) +
+  ggplot(aes(age, revenue.deserved)) +
   geom_point()
 ```
+
+```{r, fig.width=7, fig.height=7}
+
+ans %>% 
+  drop_na() %>% 
+  group_by(is.artist) %>% 
+  summarise(
+    `Average percentage of revenue granted to an AI-trained-on artist` = mean(revenue.deserved),
+    `Total number of participants`=n()
+  ) %>% 
+  pivot_longer(c(`Total number of participants`,
+                 `Average percentage of revenue granted to an AI-trained-on artist`
+                 )) %>% 
+  ggplot(aes(x=is.artist, y=value)) +
+  geom_bar(stat="identity") +
+    facet_wrap(~name, ncol = 1, scale="free") +
+  xlab("Participants grouped by their relationship to creating art") +
+  ylab(NULL)
+
+```
+
