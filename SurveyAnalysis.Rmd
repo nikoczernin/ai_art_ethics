@@ -34,6 +34,10 @@ Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 library(tidyverse)
 library(ggpubr)
 library(forcats)
+library(knitr)
+
+
+library("fabricatr")
 ```
 
 ```{r}
@@ -49,10 +53,6 @@ ans <- ans %>%
     ) %>% 
   select(-a1, -a2, -a3)
 
-ans %>% head()
-ans %>% summary()
-
-ans %>% select(is.artist)
 # recode the factor levels of the longer answers
 levels(ans$is.artist) <- c("I'm an artist", "I enjoy creating art",
                                 "I created some art,\nnot passionately", "I do not create art")
@@ -62,32 +62,43 @@ ans$is.artist <- ans$is.artist %>% fct_rev()
 # levels(ans$is.artist) = c(4, 3, 2, 1) # the levels for is.artist arrange themselves perfectly somehow; 1 is no art, 4 is max art
 # levels(ans$would.boycott) = c(0, 1, 2)
 
+# fill the single NA value in the revenue.deserved column with the median value
+ans <- ans %>% mutate(across(revenue.deserved, ~replace_na(., median(., na.rm=TRUE))))
+
 
 # assigning short variable names to the questions
 q1_varname <- "Percentage of generated revenue granted to trained on artist"
 q2_varname <- "Respondents' relationships to creating art"
 q3_varname <- "Respondents' propensity to boycott unpaid AI-generated art training"
 ```
-
-# Exploratory analysis
-
-```{r respondents' age}
-ans %>% 
-  filter(age<30) %>% 
-  ggplot(aes(age, revenue.deserved)) +
-  geom_point()
+```{r, echo=F}
+ans %>% head()
+ans %>% summary()
 
 ```
 
-## Research hypothesis 1. Artists/authors would credit other artists/authors to more money, if the model were trained on them, than non-artists/non-authors.
 
+## Research hypothesis 1
 
-  # 3: Correlation Analysis
-  # 4: Maybe also regression analysis if necessary and makes sense 
-
+*Artists/authors would credit other artists/authors to more money, if the model were trained on them, than non-artists/non-authors.*
 
 ### Exploring the nature of the data/responses
-```{r}
+
+```{r, echo=F}
+
+ans %>% 
+  group_by(is.artist) %>% 
+  summarise(
+    n=n(),
+    `Mean age`=mean(age, na.rm=T) %>% round(1)
+  ) %>% 
+  ggplot(aes(x=is.artist, y=n, fill=`Mean age`)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=n, x=is.artist, y=n+1.5)) +
+  theme_minimal() +
+  ylab(NULL) +
+  xlab(NULL) +
+  ggtitle(q2_varname)
 
 # Histogram
 q1_hist <- ans %>% 
@@ -95,66 +106,96 @@ q1_hist <- ans %>%
   ggplot(aes(revenue.deserved)) +
   geom_histogram(bins=10) +
   ggtitle("Reported proceeds allocated to the artist") +
+  theme_minimal() +
   ylab(NULL) +
   xlab(NULL)
+
 # Boxplot overall
 q1_boxplot <- ans %>% 
   filter(!is.na(revenue.deserved)) %>% 
   ggplot(aes(revenue.deserved)) +
+  theme_minimal() +
   geom_boxplot() +
+  theme(
+    axis.text.y=element_blank(),axis.ticks=element_blank(), 
+  ) +
   xlab(q1_varname)
 # put them on top of each other
-ggarrange(q1_hist, q1_boxplot, nrow=2)
+ggarrange(q1_hist, q1_boxplot, nrow=2) %>% print()
 
 # Boxplot per level of questison 2: are you an artist youself?
 ans %>% 
   filter(!is.na(revenue.deserved)) %>% 
   ggplot(aes(x=revenue.deserved, y=is.artist)) +
   geom_boxplot() +
+  theme_minimal() +
   xlab(q1_varname) +
-  ylab(q2_varname) +
+  ylab(NULL) +
   ggtitle("Reported proceeds allocated to the artist by relationship to creating art") 
 
 ```
-### Independence testing. 
+
+### Independence testing.
+
 Null hypothesis: If a generative model was trained entirely on the works of one artist, then other artists would credit a higher percentage of the proceeds of said model to the original artists
 
-
 ```{r}
-# step 2
+k <- 5
+# cut the revenue.deserved values into k levels: low to high 
+ans$revenue.deserved.cat = split_quantile(ans$revenue.deserved, type=k)  
+table(ans$revenue.deserved.cat, ans$is.artist) %>% 
+  print() %>% 
+  chisq.test()
 
-# cut the revenue.deserved values into 5 levels: low to high 
-revenue.deserved_discretized <- cut(ans$revenue.deserved, breaks = c(-Inf, 20, 40, 60, 80, Inf), labels = c("Low", "Medium Low", "Medium", "Medium High", "High"))
+# what if we replicated that data with the same results?
+table(ans$revenue.deserved.cat, ans$is.artist) %>% 
+  chisq.test(simulate.p.value = TRUE)
 
-test_table = table(revenue.deserved_discretized, ans$is.artist)
-chisq.test(test_table)
+```
 
-# what if we replicated that data 5 times with the same results?
-rep_table = rep(test_table, 5)
-chisq.test(rep_table)
+We conducted chi-squared tests to examine the independence of the percentage of 
+revenue a respondent would grant an artist, that the generative model had been trained on
+and the respondent's relationship to creating art themselves. 
+We recoded the granted.revenue variable to the quintiles. 
+To correct for the low sample size, we run the test with replicates. 
+The resulting p-values were ~0.7 and ~0.8, which exceed the conventional significance level of 0.05. 
+As a result, there is insufficient evidence to reject the null hypothesis of independence, 
+even when using replicates. A bigger pool of respondents may have yielded different 
+results, after all, only 6 of the respondents claimed to be somewhat passionate 
+about creating art. 
 
 
-# step 3
 
-revenue.deserved = ans$revenue.deserved
-is.artist = as.numeric(as.character(ans$is.artist)) # the reason for first converting to str then to int is because I gave the factors pre-determined int values
+```{r, include=FALSE}
 
-cor.test(revenue.deserved, is.artist, method = "spearman")
+#### Regression
+# For good measure we compute a linear model. 
+# As expected, it is completely useless, we are nowhere near being able
+# to reject the Null-Hypothesis of any of the factors being non-zero. 
 
-# what if we replicated that data 5 times with the same results?
-revenue.deserved_rep = rep(revenue.deserved, 5)
-is.artist_rep = rep(is.artist, 5)
+rs1 <- ans %>% 
+  drop_na() %>% 
+  select(revenue.deserved, is.artist) %>% 
+  mutate(x=row_number(), y=1) %>% 
+  pivot_wider(id_cols=c(x, revenue.deserved), names_from = is.artist, values_from =y ) %>% 
+  select(-x) %>% 
+  mutate_all(function(x) replace_na(x, 0))
 
-cor.test(revenue.deserved_rep, is.artist_rep, method = "spearman")
-
+linear_model <- lm(revenue.deserved ~ ., rs1)
+summary(linear_model)
 
 ```
 
 
+
+## Research hypothesis 2
+
+*Artists/authors are, compared to non-artists/non-authors, more inclined to boycott art that was created by a model that trained on an artist, if the artist doesn't get any money out of it*
+
+
+
 ```{r}
-
-
-# RS Artists/authors are, compared to non-artists/non-authors, more inclined to boycott art that was created by a model that trained on an artist, if the artist doesn't get any money out of it.
+# RS .
 
 would.boycott_value_counts = table(ans$would.boycott)
 would.boycott_value_counts
@@ -162,29 +203,61 @@ would.boycott_value_counts
 # steps: 
   # barplot of total would.boycott, barplots of would.boycott by is.artist
   # chi square test
-  # corrtest 
+  # corrtest
+```
 
+
+```{r, echo=F, fig.width=9}
+
+ans %>% 
+  ggplot(aes(x=would.boycott, fill=is.artist)) +
+  geom_bar() +
+  scale_fill_brewer(palette="Paired") +
+  theme_minimal() +
+  labs(fill=q2_varname) +
+  theme(legend.position = "bottom") +
+  ggtitle(q3_varname) +
+  xlab(NULL) +
+  ylab(NULL) 
+
+```
+
+
+```{r, fig.width=10}
 # step 1
 
-ggplot(ans, aes(y=would.boycott)) + 
+ggplot(ans, aes(y=would.boycott, fill=is.artist)) + 
   geom_bar() + 
-  labs(y = "Wilingness to boycott", title="Willingness to boycott a piece of artificially generated piece of art if the author of the training material is not compensated")
-
-ggplot(ans, aes(y=would.boycott)) + 
-  geom_bar() + 
-  labs(y = "Wilingness to boycott", title="Willingness to boycott a piece of artificially generated piece of art if the author of the training material is not compensated by level of engagement with art") + 
-  facet_wrap("is.artist")
-  
-
-# step 2
-
-test_table = table(ans$is.artist, ans$would.boycott)
-chisq.test(test_table)
-
-rep_table = rep(test_table, 5)
-chisq.test(rep_table)
+    scale_fill_brewer(palette="Paired") +
+  labs(y = NULL, x=NULL,
+       title=q3_varname %>% paste( "by level of engagement with art"),
+       fill=q2_varname
+       ) + 
+  facet_wrap(~ is.artist)
+```
 
 
+### Independence testing.
+
+Null hypothesis: If a generative model was trained entirely on the works of one artist, then other artists would credit a higher percentage of the proceeds of said model to the original artists
+
+
+```{r, fig.width=10}
+
+# cut the revenue.deserved values into k levels: low to high 
+table(ans$would.boycott, ans$is.artist) %>% 
+  print() %>% 
+  chisq.test()
+
+# what if we replicated that data with the same results?
+table(ans$would.boycott, ans$is.artist) %>% 
+  chisq.test(simulate.p.value = TRUE)
+
+
+```
+
+
+```{r, fig.width=10}
 # step 3
 
 # the reason for first converting to str then to int is because I gave the factors pre-determined int values
@@ -194,4 +267,3 @@ would.boycott = as.numeric(as.character(ans$would.boycott))
 cor.test(is.artist, would.boycott, method = "spearman")
 
 ```
-
