@@ -35,9 +35,7 @@ library(tidyverse)
 library(ggpubr)
 library(forcats)
 library(knitr)
-
-
-library("fabricatr")
+library(fabricatr)
 ```
 
 ```{r}
@@ -258,18 +256,7 @@ table(ans$would.boycott, ans$is.artist) %>%
 
 ```
 
-TODO: 
-write up summary
 
-```{r, fig.width=10}
-
-# the reason for first converting to str then to int is because I gave the factors pre-determined int values
-is.artist = as.numeric(as.character(ans$is.artist))
-would.boycott = as.numeric(as.character(ans$would.boycott))
-
-cor.test(is.artist, would.boycott, method = "spearman")
-
-```
 
 
 ## Research hypothesis 3
@@ -333,6 +320,47 @@ ans %>%
 
 ### Testing the differences in means
 
+Starting out by testing the difference in means of the two groups:  
+Respondents that would boycott and those that would not.  
 
+The response values are not normally distributed, therefore we use a non-parametric test, 
+namely a Wilcoxon test. 
+```{r}
+wilcox.test(
+  filter(ans, would.boycott.2=="Yes")$revenue.deserved, 
+  filter(ans, would.boycott.2=="No")$revenue.deserved, 
+  paired = TRUE, alternative = "two.sided"
+  ,exact = FALSE
+  )
+```
+The test yields a p-value of <0.033, which lets us reject the Null-Hypothesis that there 
+is no difference in means of granted revenue percentage between the groups.  
+We can therefore confirm that for our sample, the respondents that are inclined to 
+boycott a piece of art, if the original, trained-on artist did not get compensated, 
+would also grant them a higher portion of the revenue that would have been generated 
+from said piece of art.  
+
+### Exploring the non-boycotting group further
+
+The results is not surprising, we in fact were trying to make out, whether 
+respondents that would grant the artists a greater portion of the generated revenue 
+would even consider boycotting the AI-generated piece, determining if the ethical 
+values would be even acted upon. 
+
+```{r}
+non.boycotter <- ans %>% 
+  filter(would.boycott == "No") 
+
+p1 <- non.boycotter %>% 
+  ggplot(aes(x=revenue.deserved)) +
+  geom_boxplot()
+p2 <- non.boycotter %>% 
+  ggplot(aes(x=revenue.deserved)) +
+  geom_histogram()
+ggarrange(p1, p2, nrow=2)
+```
+The non-boycotters' percentages of revenue granted to trained-on artists, is 
+quite evenly distributed. Seeing as we are only looking at a total of 19 respondents, 
+we are far from being able to make a generalizing statement to answer the original question.  
 
 
