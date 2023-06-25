@@ -283,9 +283,56 @@ ans %>%
     geom_boxplot() +
     theme_minimal() +
     ylab(NULL) +
+    stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="red") +
+    ggtitle(q1_varname %>% paste("\nby", q3_varname)) +
+    xlab(q1_varname)
+
+```
+
+
+
+Looking at the parallel boxplots, we can make out a difference in distribution for 
+revenue percentages credited to trained-on artists for the boycotters and non-boycotters. 
+The median and mean (red dots) values for the respondents willing to boycott such art are 
+higher than for the ones not willing to. 
+The respondents who would not boycott art created from unpaid training is all over, while 
+the respondents who would boycott it, appear to be credit the artists more of the generated revenue.  
+
+A different perspective on the answer options would be, that perhaps the difference in 
+distributions is only there, because of the separation of "Yes" answers. 
+Regardless, when joining the answers, "Yes" and "Only if I really like the artist", 
+the overall distribution of the answers in regards of granted revenue looks not so similar.  
+
+```{r}
+ans$would.boycott.2 <- ans$would.boycott %>% fct_lump_min(16, other_level="Yes") 
+
+ans %>%   
+ggplot(aes(x=revenue.deserved, y=would.boycott.2)) +
+  geom_boxplot() +
+  theme_minimal() +
+  stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="red") +
+  ylab(NULL) +
   ggtitle(q1_varname %>% paste("\nby", q3_varname)) +
   xlab(q1_varname)
 
 ```
 
-Looking at the paralell boxplots, we can clearly tell that th
+The differences in mean are as follows:
+```{r, echo=FALSE}
+ans %>% 
+  group_by(would.boycott) %>% 
+  summarise(rev_mean = mean(revenue.deserved, na.rm = T)) %>% 
+  rename(`Mean credited revenue`=rev_mean) 
+
+ans %>% 
+  group_by(would.boycott.2) %>% 
+  summarise(rev_mean = mean(revenue.deserved, na.rm = T)) %>% 
+  rename(`Mean credited revenue`=rev_mean)
+
+```
+
+### Testing the differences in means
+
+
+
+
