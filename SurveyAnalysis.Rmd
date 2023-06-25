@@ -31,10 +31,6 @@ Guidelines for the report:
 Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 
 ```{r, include=FALSE}
-# @Nate: Guidlines say to only include important code snippets
-# I would argue that noone will read this snipped
-# therefore I set include to FALSE
-# feel free to change it if you disagree
 library(tidyverse)
 library(ggpubr)
 library(forcats)
@@ -43,8 +39,8 @@ library(forcats)
 ```{r}
 ans <- read.delim("answers.csv", sep = ";")
 names(ans) <- c("gender", "age", "program", "a1", "a2", "a3")
-ans <-
-  ans %>% 
+
+ans <- ans %>% 
   # rename the answer cols and transform them 
   mutate(
     revenue.deserved = str_extract(a1, "[:digit:]*") %>% as.numeric(),
@@ -52,53 +48,150 @@ ans <-
     would.boycott = a3 %>% as.factor()
     ) %>% 
   select(-a1, -a2, -a3)
-ans
+
+ans %>% head()
 ans %>% summary()
 
 ans %>% select(is.artist)
 # recode the factor levels of the longer answers
-levels(ans$is.artist) <- c("I'm an artist", "I enjoy creating art", 
-                                "I created some art, not passionately", "I do not create")
-ans %>% select(is.artist)
+levels(ans$is.artist) <- c("I'm an artist", "I enjoy creating art",
+                                "I created some art,\nnot passionately", "I do not create art")
+# reverse the levels
+ans$is.artist <- ans$is.artist %>% fct_rev()
+# rearrange the factor levels of the text answers
+# levels(ans$is.artist) = c(4, 3, 2, 1) # the levels for is.artist arrange themselves perfectly somehow; 1 is no art, 4 is max art
+# levels(ans$would.boycott) = c(0, 1, 2)
+
+
+# assigning short variable names to the questions
+q1_varname <- "Percentage of generated revenue granted to trained on artist"
+q2_varname <- "Respondents' relationships to creating art"
+q3_varname <- "Respondents' propensity to boycott unpaid AI-generated art training"
 ```
 
 # Exploratory analysis
 
-```{r}
-p1 <- ans %>% 
-  ggplot(aes(revenue.deserved)) +
-  geom_histogram(bins=10)
-p2 <- ans %>% 
-  ggplot(aes(revenue.deserved)) +
-  geom_boxplot() 
-ggarrange(p1, p2, nrow=2)
-
-```
-
-```{r}
+```{r respondents' age}
 ans %>% 
   filter(age<30) %>% 
   ggplot(aes(age, revenue.deserved)) +
   geom_point()
+
 ```
 
-```{r, fig.width=7, fig.height=7}
+## Research hypothesis 1. Artists/authors would credit other artists/authors to more money, if the model were trained on them, than non-artists/non-authors.
 
+
+  # 3: Correlation Analysis
+  # 4: Maybe also regression analysis if necessary and makes sense 
+
+
+### Exploring the nature of the data/responses
+```{r}
+
+# Histogram
+q1_hist <- ans %>% 
+  filter(!is.na(revenue.deserved)) %>% 
+  ggplot(aes(revenue.deserved)) +
+  geom_histogram(bins=10) +
+  ggtitle("Reported proceeds allocated to the artist") +
+  ylab(NULL) +
+  xlab(NULL)
+# Boxplot overall
+q1_boxplot <- ans %>% 
+  filter(!is.na(revenue.deserved)) %>% 
+  ggplot(aes(revenue.deserved)) +
+  geom_boxplot() +
+  xlab(q1_varname)
+# put them on top of each other
+ggarrange(q1_hist, q1_boxplot, nrow=2)
+
+# Boxplot per level of questison 2: are you an artist youself?
 ans %>% 
-  drop_na() %>% 
-  group_by(is.artist) %>% 
-  summarise(
-    `Average percentage of revenue granted to an AI-trained-on artist` = mean(revenue.deserved),
-    `Total number of participants`=n()
-  ) %>% 
-  pivot_longer(c(`Total number of participants`,
-                 `Average percentage of revenue granted to an AI-trained-on artist`
-                 )) %>% 
-  ggplot(aes(x=is.artist, y=value)) +
-  geom_bar(stat="identity") +
-    facet_wrap(~name, ncol = 1, scale="free") +
-  xlab("Participants grouped by their relationship to creating art") +
-  ylab(NULL)
+  filter(!is.na(revenue.deserved)) %>% 
+  ggplot(aes(x=revenue.deserved, y=is.artist)) +
+  geom_boxplot() +
+  xlab(q1_varname) +
+  ylab(q2_varname) +
+  ggtitle("Reported proceeds allocated to the artist by relationship to creating art") 
+
+```
+### Independence testing. 
+Null hypothesis: If a generative model was trained entirely on the works of one artist, then other artists would credit a higher percentage of the proceeds of said model to the original artists
+
+
+```{r}
+# step 2
+
+# cut the revenue.deserved values into 5 levels: low to high 
+revenue.deserved_discretized <- cut(ans$revenue.deserved, breaks = c(-Inf, 20, 40, 60, 80, Inf), labels = c("Low", "Medium Low", "Medium", "Medium High", "High"))
+
+test_table = table(revenue.deserved_discretized, ans$is.artist)
+chisq.test(test_table)
+
+# what if we replicated that data 5 times with the same results?
+rep_table = rep(test_table, 5)
+chisq.test(rep_table)
+
+
+# step 3
+
+revenue.deserved = ans$revenue.deserved
+is.artist = as.numeric(as.character(ans$is.artist)) # the reason for first converting to str then to int is because I gave the factors pre-determined int values
+
+cor.test(revenue.deserved, is.artist, method = "spearman")
+
+# what if we replicated that data 5 times with the same results?
+revenue.deserved_rep = rep(revenue.deserved, 5)
+is.artist_rep = rep(is.artist, 5)
+
+cor.test(revenue.deserved_rep, is.artist_rep, method = "spearman")
+
+
+```
+
+
+```{r}
+
+
+# RS Artists/authors are, compared to non-artists/non-authors, more inclined to boycott art that was created by a model that trained on an artist, if the artist doesn't get any money out of it.
+
+would.boycott_value_counts = table(ans$would.boycott)
+would.boycott_value_counts
+
+# steps: 
+  # barplot of total would.boycott, barplots of would.boycott by is.artist
+  # chi square test
+  # corrtest 
+
+# step 1
+
+ggplot(ans, aes(y=would.boycott)) + 
+  geom_bar() + 
+  labs(y = "Wilingness to boycott", title="Willingness to boycott a piece of artificially generated piece of art if the author of the training material is not compensated")
+
+ggplot(ans, aes(y=would.boycott)) + 
+  geom_bar() + 
+  labs(y = "Wilingness to boycott", title="Willingness to boycott a piece of artificially generated piece of art if the author of the training material is not compensated by level of engagement with art") + 
+  facet_wrap("is.artist")
+  
+
+# step 2
+
+test_table = table(ans$is.artist, ans$would.boycott)
+chisq.test(test_table)
+
+rep_table = rep(test_table, 5)
+chisq.test(rep_table)
+
+
+# step 3
+
+# the reason for first converting to str then to int is because I gave the factors pre-determined int values
+is.artist = as.numeric(as.character(ans$is.artist))
+would.boycott = as.numeric(as.character(ans$would.boycott))
+
+cor.test(is.artist, would.boycott, method = "spearman")
 
 ```
 
