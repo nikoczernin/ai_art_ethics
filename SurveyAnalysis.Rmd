@@ -32,7 +32,7 @@ Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 
 ```{r, include=FALSE}
 library(tidyverse)
-library(ggpubr)
+# library(ggpubr)
 library(forcats)
 library(knitr)
 library(fabricatr)
@@ -119,8 +119,9 @@ q1_boxplot <- ans %>%
   ) +
   xlab(q1_varname)
 # put them on top of each other
-ggarrange(q1_hist, q1_boxplot, nrow=2) %>% print()
-
+# ggarrange(q1_hist, q1_boxplot, nrow=2) %>% print()
+q1_hist %>% print()
+q1_boxplot %>% print()
 # Boxplot per level of questison 2: are you an artist youself?
 ans %>% 
   filter(!is.na(revenue.deserved)) %>% 
@@ -357,7 +358,11 @@ p1 <- non.boycotter %>%
 p2 <- non.boycotter %>% 
   ggplot(aes(x=revenue.deserved)) +
   geom_histogram()
-ggarrange(p1, p2, nrow=2)
+  
+p1 %>% print()
+p2 %>% print()
+# ggarrange(p1, p2, nrow=2)
+
 ```
 The non-boycotters' percentages of revenue granted to trained-on artists, is 
 quite evenly distributed. Seeing as we are only looking at a total of 19 respondents, 
