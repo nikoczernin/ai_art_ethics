@@ -1,40 +1,19 @@
 ---
 title: "Survey on ethics regarding AI-generated art"
-subtitle: "Data Acquisition and Survey Methods"
-output: html_notebook
-author: "Nikolaus Czernin, Aliakseyeu Dzimitry"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
 ---
 
-# Requirements (delete)
 
-Survey data analysis, report & presentation:
+subtitle: "Data Acquisition and Survey Methods"\
+author: "Nikolaus Czernin, Aliakseyeu Dzimitry"
 
--   **Exploratory Data Analysis**: Choose appropriate methods to explore the categorical and quantitative features in your data set ([one visualization per research question]{.underline}). Briefly explain the methods and comment on your findings.
-
--   **Descriptive Inference**: Compute suitable [summary statistics]{.underline} and display the [results in a table]{.underline}.
-
--   **Analytic Inference**: Select an appropriate test statistic to [test your hypothesis]{.underline}. Summarize the results and explain how your findings are connected to your research question.
-
-\
-Guidelines for the report:
-
--   use RMarkdown
-
--   include a [table of contents]{.underline}
-
--   briefly summarize the functions used
-
--   display all [important]{.underline} code snippets in the .pdf
-
--   document your findings
-
-Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 
 ```{r, include=FALSE}
 library(tidyverse)
-# library(ggpubr)
 library(forcats)
-library(knitr)
 library(fabricatr)
 ```
 
@@ -69,18 +48,17 @@ q1_varname <- "Percentage of generated revenue granted to trained on artist"
 q2_varname <- "Respondents' relationships to creating art"
 q3_varname <- "Respondents' propensity to boycott unpaid AI-generated art training"
 ```
+
 ```{r, echo=F}
 ans %>% head()
 ans %>% summary()
-
 ```
 
-
-## Research hypothesis 1
+# Research hypothesis 1
 
 *Artists/authors would credit other artists/authors to more money, if the model were trained on them, than non-artists/non-authors.*
 
-### Exploring the nature of the data/responses
+## Exploring the nature of the data/responses
 
 ```{r, echo=F}
 
@@ -118,10 +96,9 @@ q1_boxplot <- ans %>%
     axis.text.y=element_blank(),axis.ticks=element_blank(), 
   ) +
   xlab(q1_varname)
-# put them on top of each other
-# ggarrange(q1_hist, q1_boxplot, nrow=2) %>% print()
 q1_hist %>% print()
 q1_boxplot %>% print()
+
 # Boxplot per level of questison 2: are you an artist youself?
 ans %>% 
   filter(!is.na(revenue.deserved)) %>% 
@@ -134,10 +111,9 @@ ans %>%
 
 ```
 
-### Independence testing.
+## Independence testing.
 
-Null hypothesis: If a generative model was trained entirely on the works of one artist, then other artists would credit a higher percentage of the proceeds of said model to the original artists
-
+*Hypothesis: If a generative model was trained entirely on the works of one artist, then other artists would credit a higher percentage of the proceeds of said model to the original artists*
 ```{r}
 k <- 5
 # cut the revenue.deserved values into k levels: low to high 
@@ -152,18 +128,7 @@ table(ans$revenue.deserved.cat, ans$is.artist) %>%
 
 ```
 
-We conducted chi-squared tests to examine the independence of the percentage of 
-revenue a respondent would grant an artist, that the generative model had been trained on
-and the respondent's relationship to creating art themselves. 
-We recoded the granted.revenue variable to the quintiles. 
-To correct for the low sample size, we run the test with replicates. 
-The resulting p-values were ~0.7 and ~0.8, which exceed the conventional significance level of 0.05. 
-As a result, there is insufficient evidence to reject the null hypothesis of independence, 
-even when using replicates. A bigger pool of respondents may have yielded different 
-results, after all, only 6 of the respondents claimed to be somewhat passionate 
-about creating art. 
-
-
+We conducted chi-squared tests to examine the independence of the percentage of revenue a respondent would grant an artist, that the generative model had been trained on and the respondent's relationship to creating art themselves. We recoded the granted.revenue variable to the quintiles. To correct for the low sample size, we run the test with replicates. The resulting p-values were \~0.7 and \~0.8, which exceed the conventional significance level of 0.05. As a result, there is insufficient evidence to reject the null hypothesis of independence, even when using replicates. A bigger pool of respondents may have yielded different results, after all, only 6 of the respondents claimed to be somewhat passionate about creating art.
 
 ```{r, include=FALSE}
 
@@ -185,12 +150,9 @@ summary(linear_model)
 
 ```
 
-
-
-## Research hypothesis 2
+# Research hypothesis 2
 
 *Artists/authors are, compared to non-artists/non-authors, more inclined to boycott art that was created by a model that trained on an artist, if the artist doesn't get any money out of it*
-
 
 ```{r, echo=F, fig.width=9}
 
@@ -214,16 +176,11 @@ boycotts %>%
 
 ```
 
-Turns out, exactly half of the respondents would consider boycotting a piece of AI-generated art, 
-if the trained-on artist was not compensated for his contribution. Some of them only 
-if they already really liked the artist.  
-  
-Maybe more surprisingly, the two respondents claiming to be artists themselves 
-answered not to be wanting to boycott such art. 
+Turns out, exactly half of the respondents would consider boycotting a piece of AI-generated art, if the trained-on artist was not compensated for his contribution. Some of them only if they already really liked the artist.
+
+Maybe more surprisingly, the two respondents claiming to be artists themselves answered not to be wanting to boycott such art.
 
 ```{r, fig.width=10}
-# step 1
-
 ggplot(ans, aes(y=would.boycott, fill=is.artist)) + 
   geom_bar() + 
     scale_fill_brewer(palette="Paired") +
@@ -234,17 +191,13 @@ ggplot(ans, aes(y=would.boycott, fill=is.artist)) +
   facet_wrap(~ is.artist)
 ```
 
+## Independence testing.
 
-### Independence testing.
+*Null hypothesis: If the artist the generative model was trained on were not granted any of the revenue generated by the art, other artists would be more likely to boycott that piece of art.*  
 
-Null hypothesis: If the artist the generative model was trained on were not granted any of the revenue generated by the art, other artists would be more likely to boycott that piece of art.  
-
-From looking at the above barplots, we cannot make out a clear pattern of who is 
-more likely to boycott art visually.
-
+From looking at the above barplots, we cannot make out a clear pattern of who is more likely to boycott art visually.
 
 ```{r, fig.width=10}
-
 # cut the revenue.deserved values into k levels: low to high 
 table(ans$would.boycott, ans$is.artist) %>% 
   print() %>% 
@@ -254,16 +207,13 @@ table(ans$would.boycott, ans$is.artist) %>%
 table(ans$would.boycott, ans$is.artist) %>% 
   chisq.test(simulate.p.value = TRUE)
 
-
 ```
 
+# Research hypothesis 3
 
+*Hypothesis: There is no statistical connection between people who would grant artists/authors more money (question 1) and people who would boycott an AI-generated piece of art, that the trained-on artist did not make any money from, meaning that respondents, while they may agree with the ethical worries of artists regarding AI-generated art, they do not act upon those values.*  
 
-
-## Research hypothesis 3
-*There is no statistical connection between people who would grant artists/authors more money (question 1) and people who would boycott an AI-generated piece of art, that the trained-on artist did not make any money from, meaning that respondents, while they may agree with the ethical worries of artists regarding AI-generated art, they do not act upon those values.*
-
-### Exploring the data
+## Exploring the data
 
 ```{r, fig.width=9}
 ans %>%   
@@ -277,19 +227,9 @@ ans %>%
 
 ```
 
-
-
-Looking at the parallel boxplots, we can make out a difference in distribution for 
-revenue percentages credited to trained-on artists for the boycotters and non-boycotters. 
-The median and mean (red dots) values for the respondents willing to boycott such art are 
-higher than for the ones not willing to. 
-The respondents who would not boycott art created from unpaid training is all over, while 
-the respondents who would boycott it, appear to be credit the artists more of the generated revenue.  
-
-A different perspective on the answer options would be, that perhaps the difference in 
-distributions is only there, because of the separation of "Yes" answers. 
-Regardless, when joining the answers, "Yes" and "Only if I really like the artist", 
-the overall distribution of the answers in regards of granted revenue looks not so similar.  
+Looking at the parallel boxplots, we can make out a difference in distribution for revenue percentages credited to trained-on artists for the boycotters and non-boycotters. The median and mean (red dots) values for the respondents willing to boycott such art are higher than for the ones not willing to. The respondents who would not boycott art created from unpaid training is all over, while the respondents who would boycott it, appear to be credit the artists more of the generated revenue.  
+  
+A different perspective on the answer options would be, that perhaps the difference in distributions is only there, because of the separation of "Yes" answers. Regardless, when joining the answers, "Yes" and "Only if I really like the artist", the overall distribution of the answers in regards of granted revenue looks not so similar.  
 
 ```{r}
 ans$would.boycott.2 <- ans$would.boycott %>% fct_lump_min(16, other_level="Yes") 
@@ -305,7 +245,8 @@ ggplot(aes(x=revenue.deserved, y=would.boycott.2)) +
 
 ```
 
-The differences in mean are as follows:
+The differences in mean are as follows:  
+
 ```{r, echo=FALSE}
 ans %>% 
   group_by(would.boycott) %>% 
@@ -319,34 +260,31 @@ ans %>%
 
 ```
 
-### Testing the differences in means
+## Testing the differences in means
 
-Starting out by testing the difference in means of the two groups:  
-Respondents that would boycott and those that would not.  
+*Null-Hypothesis: There is no statistical difference in the means of the percentage of revenue credited to artists as comparing the groupy of respondents willing and not willing to boycott art, whose generative-model was trained on said artists.*
 
-The response values are not normally distributed, therefore we use a non-parametric test, 
-namely a Wilcoxon test. 
+Starting out by testing the difference in means of the two groups:\
+Respondents that would boycott and those that would not.
+
+The response values are not normally distributed, therefore we use a non-parametric test, namely a Wilcoxon test.
+
 ```{r}
 wilcox.test(
   filter(ans, would.boycott.2=="Yes")$revenue.deserved, 
   filter(ans, would.boycott.2=="No")$revenue.deserved, 
-  paired = TRUE, alternative = "two.sided"
-  ,exact = FALSE
+  paired = TRUE, 
+  alternative = "two.sided",
+  exact = FALSE
   )
 ```
-The test yields a p-value of <0.033, which lets us reject the Null-Hypothesis that there 
-is no difference in means of granted revenue percentage between the groups.  
-We can therefore confirm that for our sample, the respondents that are inclined to 
-boycott a piece of art, if the original, trained-on artist did not get compensated, 
-would also grant them a higher portion of the revenue that would have been generated 
-from said piece of art.  
 
-### Exploring the non-boycotting group further
+The test yields a p-value of \<0.033, which lets us reject the Null-Hypothesis that there is no difference in means of granted revenue percentage between the groups.\
+We can therefore confirm that for our sample, the respondents that are inclined to boycott a piece of art, if the original, trained-on artist did not get compensated, would also grant them a higher portion of the revenue that would have been generated from said piece of art.
 
-The results is not surprising, we in fact were trying to make out, whether 
-respondents that would grant the artists a greater portion of the generated revenue 
-would even consider boycotting the AI-generated piece, determining if the ethical 
-values would be even acted upon. 
+## Exploring the non-boycotting group further
+
+The results is not surprising, we in fact were trying to make out, whether respondents that would grant the artists a greater portion of the generated revenue would even consider boycotting the AI-generated piece, determining if the ethical values would be even acted upon.
 
 ```{r}
 non.boycotter <- ans %>% 
@@ -358,14 +296,15 @@ p1 <- non.boycotter %>%
 p2 <- non.boycotter %>% 
   ggplot(aes(x=revenue.deserved)) +
   geom_histogram()
-  
+```
+
+
+```{r, echo=F, fig.width=6}
 p1 %>% print()
 p2 %>% print()
-# ggarrange(p1, p2, nrow=2)
 
 ```
-The non-boycotters' percentages of revenue granted to trained-on artists, is 
-quite evenly distributed. Seeing as we are only looking at a total of 19 respondents, 
-we are far from being able to make a generalizing statement to answer the original question.  
 
+  
 
+The non-boycotters' percentages of revenue granted to trained-on artists, is quite evenly distributed. Seeing as we are only looking at a total of 19 respondents, we are far from being able to make a generalizing statement to answer the original question.
