@@ -1,41 +1,26 @@
 ---
 title: "Survey on ethics regarding AI-generated art"
 subtitle: "Data Acquisition and Survey Methods"
-output: html_notebook
 author: "Nikolaus Czernin, Aliakseyeu Dzimitry"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    fig_width: 9 
 ---
 
-# Requirements (delete)
 
-Survey data analysis, report & presentation:
 
--   **Exploratory Data Analysis**: Choose appropriate methods to explore the categorical and quantitative features in your data set ([one visualization per research question]{.underline}). Briefly explain the methods and comment on your findings.
-
--   **Descriptive Inference**: Compute suitable [summary statistics]{.underline} and display the [results in a table]{.underline}.
-
--   **Analytic Inference**: Select an appropriate test statistic to [test your hypothesis]{.underline}. Summarize the results and explain how your findings are connected to your research question.
-
-\
-Guidelines for the report:
-
--   use RMarkdown
-
--   include a [table of contents]{.underline}
-
--   briefly summarize the functions used
-
--   display all [important]{.underline} code snippets in the .pdf
-
--   document your findings
-
-Submit both the [.rmd and .pdf]{.underline} files via TUWEL.
 
 ```{r, include=FALSE}
 library(tidyverse)
-# library(ggpubr)
 library(forcats)
-library(knitr)
 library(fabricatr)
+library(knitr)
+
+# the following line excludes messages and warnings from the output pdf
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
 ```
 
 ```{r}
