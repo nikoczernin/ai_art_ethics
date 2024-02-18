@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: sentence
----
-
 # ai_art_ethics
 
 Small survey conducted in subject "Data Acquisition and Survey Methods".
